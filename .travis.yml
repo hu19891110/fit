@@ -11,12 +11,16 @@ node_js:
   - "5.0"
 
 before_script:
-  - rm -rf lib
-  - npm run update
+  - npm run update -- --travis --token $GH_TOKEN
+  - npm run demo-init -- --travis
 
 script:
-  - npm run build
+  - npm run build -- --travis
+  - npm test
 
 cache:
   directories:
   - node_modules
+
+env:
+  - GH_TOKEN=GH_TOKEN

@@ -51,7 +51,19 @@ const fitDts = (content, info, filePath, rootPath) => {
 
     /**
      * 将引用的模块 copy 过来,并且修改绝对路径
+     * 内部模块不执行,因为会同步到仓库中,而使项目中出现重复定义的 bug
      */
+    if (info.categoryInfo.access === 'public') {
+        content = autoTypings(content, info, filePath, rootPath)
+    }
+
+    return content
+}
+
+/**
+ * 创建 auto-typings 将根目录的 typings 复制到每个文件中
+ */
+const autoTypings = (content, info, filePath, rootPath)=> {
     const filePathArray = filePath.split('/')
     if (filePathArray[filePathArray.length - 1] === 'lib' && filePathArray[filePathArray.length - 2] === info.module.path) {
         // 根目录
@@ -78,7 +90,7 @@ const fitDts = (content, info, filePath, rootPath) => {
                 /**
                  * 修正内容中的依赖路径
                  * */
-                // 判断 filePath 与 rootPath 的距离
+                    // 判断 filePath 与 rootPath 的距离
                 const filePathDeepRootPathIndex = filePath.split('/').length - rootPath.split('/').length
                 // 距离为 0 的情况
                 let relativePath = './'
@@ -123,11 +135,13 @@ const parseDTs = (info) => {
 const deleteDTS = (info) => {
     const modulePath = getModulePath(info)
 
-    // 如果是 tb 组件,不删除 lib 下的定义文件,因为从gitlab安装时需要
-    if (info.categoryName === 'tb') {
+    // 如果私有组件,不删除 lib 下的定义文件,因为从gitlab安装时需要
+    if (info.categoryInfo.access === 'private') {
         execSync(`find ${modulePath}/src -name "*.d.ts" | xargs rm`)
     } else {
-        execSync(`find ${modulePath} -name "*.d.ts" | xargs rm`)
+        // 这种目录全扫描,会豁免 models 目录!
+        // 这样,我们就可以在组件的 models 目录下定义 d.ts 文件而不用担心被删除啦!
+        execSync(`find ${modulePath} -not -path "${modulePath}/models/*" -name "*.d.ts" | xargs rm`)
     }
 
     // 如果包含 .tsx 文件,则删除 src 下的 jsx 文件
@@ -156,9 +170,6 @@ const deleteDemoJsxAndJs = (info) => {
 }
 
 const syncCnpm = (info) => {
-    // 贴吧组件不同步
-    if (info.categoryName === 'tb') return
-
     consoleLog(`cnpm 开始同步..`, 'grey', getModulePath(info))
     exec(`cnpm sync ${info.categoryInfo.prefix}-${info.module.path}`, (err) => {
         if (err) {
@@ -169,13 +180,10 @@ const syncCnpm = (info) => {
 }
 
 const publish = (info) => {
-    // 贴吧组件不发布
-    if (info.categoryName === 'tb') return
-    
     execSync(`cd lib/${info.categoryName}/${info.module.path};npm publish`)
 }
 
-export default (info) => {
+export default (info, message) => {
     // 是否有修改
     const hasChange = hasChanges(getModulePath(info))
 
@@ -197,13 +205,16 @@ export default (info) => {
         build(info, libPath)
         consoleLog('编译完成', 'green', getModulePath(info))
 
-        // 发布npm
-        consoleLog('发布中..', 'grey', getModulePath(info))
-        publish(info)
-        consoleLog('发布完成', 'green', getModulePath(info))
+        // 如果是开放模块,发布 npm
+        if (info.categoryInfo.access === 'public') {
+            consoleLog('发布中..', 'grey', getModulePath(info))
+            publish(info)
+            consoleLog('发布完成', 'green', getModulePath(info))
+        }
 
-        // 如果不是 tb 组件,删除 lib目录
-        if (info.categoryName !== 'tb') {
+        // 如果是开放模块,删除 lib 目录
+        // 私有模块因为通过内部平台直接安装,源码需要保存 lib 目录
+        if (info.categoryInfo.access === 'public') {
             deleteLib(info)
         }
 
@@ -216,14 +227,18 @@ export default (info) => {
         // 清除 demo 不必要的文件 如果是 jsx
         deleteDemoJsxAndJs(info)
 
-        // 通知 cnpm 更新
-        syncCnpm(info)
+        // 如果是开放模块,通知 cnpm 更新
+        if (info.categoryInfo.access === 'public') {
+            syncCnpm(info)
+        }
     }
     // try push
-    tryPush(getModulePath(info))
+    consoleLog('正在提交代码..', 'grey', getModulePath(info))
+    tryPush(getModulePath(info), message)
+    consoleLog('提交代码成功..', 'grey', getModulePath(info))
 
-    // 如果是 tb 组件,删除 lib目录
-    if (info.categoryName === 'tb') {
+    // 如果是开放模块,删除 lib目录
+    if (info.categoryInfo.access === 'public') {
         deleteLib(info)
     }
 }

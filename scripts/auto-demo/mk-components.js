@@ -5,10 +5,15 @@ import _ from 'lodash'
 import getDemoArray from './utils/get-demo-array'
 import getDocArray from './utils/get-doc-array'
 
-const mkComponents = (config)=> {
+const mkComponents = (config, program)=> {
     const categorys = config.categorys
 
     for (let categoryKey in categorys) {
+        // 如果是 travis 模式,跳过内部模块
+        if (program.travis && categorys[categoryKey].access === 'private'){
+            continue
+        }
+
         // pc tb 等等模块名
         mkdirp.sync(`src/components/${categoryKey}`)
 
@@ -194,7 +199,7 @@ const mkComponents = (config)=> {
                                     </Section>
                                     <Sidebar direction="right"
                                              width={120}>
-                                        <SidebarComponent gitlabUrl="http://gitlab.baidu.com/tb-component/${gitlabPath}/tree/master"
+                                        <SidebarComponent gitlabUrl="https://github.com/fit-component/${gitlabPath}/tree/master"
                                  onChange={this.handlePageChange.bind(this)}/>
                                         <ScrollListen store={store}/>
                                     </Sidebar>

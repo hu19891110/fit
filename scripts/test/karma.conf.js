@@ -4,8 +4,7 @@
 // Karma configuration
 // Generated on Fri Dec 18 2015 12:30:32 GMT+0800 (CST)
 var webpack = require('webpack')
-var resolve = require('./resolve')
-var externals = require('./externals')
+var resolve = require('../webpack/resolve')
 var argv = require('yargs').argv
 
 module.exports = function (config) {
@@ -13,7 +12,7 @@ module.exports = function (config) {
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
-        basePath: '',
+        basePath: '../../',
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
@@ -23,7 +22,7 @@ module.exports = function (config) {
         files: [
             'node_modules/babel-polyfill/dist/polyfill.js',
             'node_modules/phantomjs-polyfill/bind-polyfill.js',
-            'lib/**/*.spec.js' // specify files to watch for tests
+            'lib/**/*.spec.tsx' // specify files to watch for tests
         ],
 
         // list of files to exclude
@@ -34,7 +33,7 @@ module.exports = function (config) {
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
-            'lib/**/*.spec.js': ['webpack', 'sourcemap']
+            'lib/**/*.spec.tsx': ['webpack', 'sourcemap']
         },
 
         webpack: {
@@ -48,38 +47,33 @@ module.exports = function (config) {
 
                 loaders: [
                     {
-                        test: /\.(jsx|js|es6)?$/,
-                        exclude: [/node_modules/, /demo\/lists/],
+                        test   : /\.(tsx|ts)?$/,
+                        exclude: [/node_modules/],
+                        loaders: ['babel', 'ts-loader', 'html-path-loader']
+                    }, {
+                        test   : /\.(jsx|js)?$/,
+                        exclude: [/node_modules/],
                         loaders: ['babel', 'html-path-loader']
                     }, {
-                        test: /\.(jsx|js|es6)?$/,
-                        include: [/demo/],
-                        loaders: ['html-path-loader']
-                    }, {
-                        test: /\.js?$/,
-                        exclude: [/node_modules/, /demo\/lists/, /.*\.spec\.js/],
-                        loader: 'isparta'
-                    }, {
-                        test: /\.(scss|css)/,
-                        exclude: [/node_modules/, /lib\/pc\/style/, /lib\/mobile\/style/, /demo\/lists/],
+                        test   : /\.(scss|css)/,
+                        exclude: [/node_modules/, /lib\/pc\/style/, /lib\/mobile\/style/],
                         loaders: ['style', 'css', 'autoprefixer', 'sass', 'css-path-loader']
-                    },
-                    {
-                        test: /\.(scss|css)/,
-                        include: [/node_modules/, /lib\/pc\/style/, /lib\/mobile\/style/, /demo\/lists/],
+                    }, {
+                        test   : /\.(scss|css)/,
+                        include: [/node_modules/, /lib\/pc\/style/, /lib\/mobile\/style/],
                         loaders: ['style', 'css', 'autoprefixer', 'sass']
                     }, {
-                        test: /\.(png|jpg)$/,
+                        test   : /\.(png|jpg)$/,
                         exclude: /node_modules/,
-                        loader: 'url?limit=3000&name=img/[hash:8].[name].[ext]'
+                        loaders: ['url?limit=1024&name=img/[hash:8].[name].[ext]']
                     }, {
-                        test: /\.(woff|woff2|ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                        loader: 'url?limit=3000&name=font/[hash:8].[name].[ext]'
+                        test   : /\.(woff|woff2|ttf|eot|svg)/,
+                        loaders: ['url?limit=1024&name=font/[hash:8].[name].[ext]']
                     }, {
-                        test: /\.json$/,
+                        test  : /\.json$/,
                         loader: 'json-loader'
                     }, {
-                        test: /\.md$/,
+                        test  : /\.md$/,
                         loader: 'text-loader'
                     }
                 ]
@@ -87,8 +81,8 @@ module.exports = function (config) {
 
             plugins: [
                 new webpack.DefinePlugin({
-                    "process.env": {
-                        NODE_ENV: JSON.stringify("production")
+                    'process.env': {
+                        NODE_ENV: JSON.stringify('production')
                     }
                 })
             ],
@@ -97,6 +91,13 @@ module.exports = function (config) {
 
             alias: {
                 'sinon': 'sinon/pkg/sinon'
+            },
+
+            // 这三行配置兼容 enzyme 对 React 15.[0-3].x
+            externals: {
+                'react/lib/ExecutionEnvironment': true,
+                'react/addons': true,
+                'react/lib/ReactContext': 'window'
             }
         },
 
@@ -110,7 +111,7 @@ module.exports = function (config) {
         reporters: ['dots', 'coverage', 'html'],
 
         htmlReporter: {
-            outputDir: 'test_jasmine_html', // where to put the reports
+            outputDir: 'test/jasmine', // where to put the reports
             templatePath: null, // set if you moved jasmine_template.html
             focusOnFailures: true, // reports show failures on start
             namedFiles: false, // name files instead of creating sub-directories
@@ -125,7 +126,7 @@ module.exports = function (config) {
 
         coverageReporter: {
             type: 'html',
-            dir: './test_coverage_html/'
+            dir: 'test/coverage'
         },
 
         // web server port

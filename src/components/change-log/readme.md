@@ -1,5 +1,30 @@
 ### 改动日志
 
+#### 2016.8.7
+
+- `fit-gaea` 鼠标移动到右侧菜单的组件上,下方会显示这个组件的预览图了
+- `fit-gaea` 现在可以拖动改变右侧工具栏的宽度了
+
+#### 2016.8.2
+
+- `fit-process` 源码改为 typescript
+
+#### 2016.7.31
+
+- `fit-tooltip` 源码改为 typescript
+- `fit-timepicker` 源码改为 typescript
+- `fit-radio` 源码改为 typescript
+- `fit-checkbox` 源码改为 typescript
+- 文档中组件名正确显示了
+
+#### 2016.7.29
+
+- `fit-input` 修复火狐下红框样式问题
+
+#### 2016.7.28
+
+- `fit-gaea` 现在预览能正确显示了
+
 #### 2016.7.23
 
 - `fit-transmit-transparently` 修复传参的 bug,修复深度 clone 的 bug

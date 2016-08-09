@@ -9,6 +9,9 @@
         "jsx": "react",
         "sourceMap": true
     },
+    "filesGlob": [
+        "*.d.ts"
+    ],
     "exclude": [
         "node_modules",
         "output",
